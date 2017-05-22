@@ -1,0 +1,85 @@
+MusicSwaggerProtocol v1.0 definition :
+    - based on UDP/IP
+    - simplest possible (shortest)
+    - Server's hostname : "musicswagger_server"
+    - port : 55666
+
+Data representation :
+    | DEST CUID | SRC CUID | OP NUM | DATA LEN | DATA | ( CRC |)
+    | (8b)      | (8b)     | (8b)   | (8b)     | (8b) | ( (8b)|)
+
+    - DESTination Connection Unique Identifier : the CUID of the destination of the packet (0x00 is the server, 0xff is no one particularly)
+    - SouRCe CUID : the CUID of the source of the packet
+    - OPeration NUMber : number describing which operation is given
+    - DATA LENgth : the size of the data following in bytes
+    - DATA : the actual data of the packet, formatted as the OP requires to
+    (- CRC)
+
+Constants :
+    - DATA_VALUE_SIZE = 0x20
+    -
+
+Operations list :
+    - OP NUM = OP NAME :
+        - Description...
+        | DATA DESC    |
+        | (SIZE in bit)|
+        - PARAMETER :
+            - OPTION : DESC
+
+    - 0x00 = INFO :
+        - Generally for server response, give some info about the situation
+        | ID  | INFO |
+        | (8b)| (...)|
+        - ID :
+            - 0x00 : Nothing to say
+            - 0x01 : Packet error
+            - 0x02 : Invalid CUID
+            - 0x03 : Not supposed to receive that
+            # - 0x04 : I'm still alive ! (if not received for 1min : forgetting the device)
+            # TODO
+        - INFO :
+            Some text about the situation (ASCII).
+
+    - 0x01 = IAMNEW :
+        - When you start a device that needs a CUID to communicate over the network
+        | GUID   |
+        | (128b) |
+        - GUID :
+            The GUID of the device
+
+
+    - 0x02 = YOURETHIS :
+        - Server response to a 0x01 (give CUID)
+        | GUID   | CUID |
+        | (128b) | (8b) |
+        - GUID :
+            The GUID of the device
+        - CUID :
+            The new CUID of the device
+
+    -0x03 = MYSPEC :
+        - give the device specs to server
+        | NCHAN | NLEN | DLEN | NAME   | DESC   |
+        | (8b)  | (8b) | (8b) | (NLENb)| (DLENb)|
+        - NCHAN :
+            The number of channel available
+        - NLEN :
+            The length of the device name
+        - DLEN :
+            The length of the description
+        - NAME :
+            The name of the device (utf8)
+        - DESC :
+            The description of the device (utf8)
+
+
+    - 0x10 = GIVE DATA
+        - When device need to give data to server (can't work before a MYSPEC packet)
+        | CHAN1            | ... |
+        | (DATA_VALUE_SIZE)| ... |
+        - CHAN1, ... :
+            The values of each chanel
+
+    - 0x20 = GOODBYE
+        - Before the device is turned off
