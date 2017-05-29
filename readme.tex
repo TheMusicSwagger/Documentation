@@ -8,18 +8,17 @@
 %\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \setmainfont{DejaVu Sans}
 \newcommand{\tab}{    }
-\renewcommand{\thesection}{\Roman{section}.}
-\renewcommand{\thesubsection}{\tab\thesection \arabic{subsection}.}
-\renewcommand{\thesubsubsection}{\tab\thesubsection \alph{subsubsection})}
+\renewcommand{\thesection}{\Roman{section}. }
+\renewcommand{\thesubsection}{\tab\arabic{subsection}. }
+\renewcommand{\thesubsubsection}{\tab\alph{subsubsection}) }
 \begin{document}
 	\begin{titlepage}
 		\centering
 		{\scshape\LARGE Lycée René Descartes \par}
 		\vspace{1cm}
-		{\scshape\Large Projet d'ISN\par}
-		\vspace{1.5cm}
-		{\huge\bfseries The Music Swagger :\par De la musique interactive\par}
-		\vspace{2cm}
+		{\huge\bfseries \textit{The Music Swagger} :\par De la musique interactive\par}
+		\includegraphics[height=10cm]{presentation_image}
+		
 		{\Large\itshape Estelle FIKET\\Thomas POTIER\\Nour BOULAHCEN\par}
 		\vfill
 		encadré par\par
@@ -31,7 +30,17 @@
 	\end{titlepage}
 	\tableofcontents
 	\newpage
+	\section{Présentation}
+	\paragraph{}
+	Dans l'optique de produire un projet intéressant pour l'épreuve de baccalauréat de spécialité ISN, nous avons pensé qu'un projet sur le son était l'idée la plus pertinente quand au programme. Nous avons donc imaginer un système qui permettrait de générer du son en fonction de paramètres physiques tels que l'accélération, la distance ou tout ce qui peut être numérisé.
+	\paragraph{}
+	En effet, le traitement du son est un domaine qui nous plaisait à tous et nous avons aussi aimer travailler sur le développent Web durant l'année. Nous avons décider de mêler ces domaines dans notre projet. De plus, notre idée ne semblait pas être déjà existante ou tout du moins très peu connue.
+	\paragraph{}
+	C'est ainsi que nous nous sommes lancés dans "\textit{The Music Swagger}". Nous avons penser à un système qui permettrait de générer du son à partir de données précises, la configuration et les données physiques. Les données physiques seraient récupérées par un petit module de faible taille et la configuration se ferait via une interface Web. 
+	
 	\section{L'idée}
+	Nous avons privilégier l'ergonomie qui permet à un utilisateur non expérimenté de pourvoir simplement utiliser le projet grâce à un fonctionnement "Plug\&Play" et une interface web simpliste.
+	
 	L'idée du projet est de produire un système permettant grace à des capteurs physiques (tels que gyroscope, mètres ultrasons, ou encore photodiodes), de créer et faire varier des sons afin de générer un son. Nous avons opter pour un système de liaison par wi-fi, et des "devices" à base de Raspberry Pi Zero W pour la portabilité et le prix. Une interface Web sera mise en place afin de pouvoir configurer le comportement de façon simple et sans besoin d'application particulière. Nous avons choisis d'utiliser Python3 pour la plupart des parties pour sa simplicité, sa portabilité ainsi que la richesse de ses modules. L'interface Web est composée de PHP pour l'interaction avec la base de donnée et l'HTML, JS et CSS pour la mise en forme et les interactions avec l'utilisateur (notamment avec le système de "Nodes" en "drag\&drop").
 	\subsection{Les différentes parties}
 	\subsubsection{Le "brain"}
