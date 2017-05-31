@@ -68,12 +68,16 @@
 	\subsection{Les logiciels}
 	\subsubsection{Outils}
 	\paragraph{}
-	Afin de nous aider durant la phase de programmation et de reflexion, nous avons utilisé plusieurs logiciels. Le logiciel Web \textit{Slack} (\url{slack.com}) a été choisi pour discuter et partager des morceaux de code et des idées au sein de notre groupe de travail. C'est une application permettant le "chat" ainsi que le partage de fichier et l'intégration de tierces parties comme \textit{GitHub}. \textit{Git} par le biais de \textit{GitHub} est donc le second logiciel dont nous nous sommes servis afin de partager le code, y avoir un accès constant et pouvoir connaître l'évolution du projet. Enfin, je me suis servi du logiciel \textit{PyCharm Community Edition} qui est gratuit pour un usage personnel et non commercial et qui est très puissant quand à la programmation en python notamment grâce à une correction syntaxique, orthographique (peu utile en Python mais pratique) et une correction logique (utilisation de variables qui n'existent pas, conseils d'optimisation ou d'inutilité d'une partie du code). Nous nous sommes servis d'un server \textit{L(W)AMP} (Linux (Windows) - Apache - MySQL - PHP) pour le serveur Web. J'ai travaillé tout au long du projet sur un \textit{Linux} (dérivé de \textit{Debian} plus précisément) qui je pense est le logiciel le plus adapté à la programmation. Les ordinateurs \textit{Raspberry} fonctionnent sous \textit{Raspbian Light}. La totalité des logiciels que nous avons utilisé sont gratuits même s'il ne sont pas tous open-source.
+	Afin de nous aider durant la phase de programmation et de reflexion, nous avons utilisé plusieurs logiciels. Le logiciel Web \textit{Slack} (\url{slack.com}) a été choisi pour discuter et partager des morceaux de code et des idées au sein de notre groupe de travail. C'est une application permettant le "chat" ainsi que le partage de fichier et l'intégration de tierces parties comme \textit{GitHub}.
+	
+	\textit{Git} par le biais de \textit{GitHub} est donc le second logiciel dont nous nous sommes servis afin de partager le code, y avoir un accès constant et pouvoir connaître l'évolution du projet. Enfin, je me suis servi du logiciel \textit{PyCharm Community Edition} qui est gratuit pour un usage personnel et non commercial et qui est très puissant quand à la programmation en python notamment grâce à une correction syntaxique, orthographique (peu utile en Python mais pratique) et une correction logique (utilisation de variables qui n'existent pas, conseils d'optimisation ou d'inutilité d'une partie du code).
+	
+	Nous nous sommes servis d'un server \textit{L(W)AMP} (Linux (Windows) - Apache - MySQL - PHP) pour le serveur Web. J'ai travaillé tout au long du projet sur un \textit{Linux} (dérivé de \textit{Debian} plus précisément) qui je pense est le logiciel le plus adapté à la programmation. Les ordinateurs \textit{Raspberry} fonctionnent sous \textit{Raspbian Light}. La totalité des logiciels que nous avons utilisé sont gratuits même s'ils ne sont pas tous open-source.
 	\paragraph{}
-	J'ai d'ailleurs proposé à Estelle et Nour de leur installer un système \textit{Linux} sur une clé USB afin qu'ils puissent utiliser leur ordinateur personnel et pour leur expliquer tout ce dont ils avaient besoin sur \textit{Git} et autres. C'était peut-être un peu compliqué pour eux, car après plusieurs propositions, je n'ai pas eu de clé USB de leur part. J'ai donc été le seul à publier mon code sur \textit{GitHub}.
+	J'ai d'ailleurs proposé à Estelle et Nour de leur installer un système \textit{Linux} sur une clé USB afin qu'ils puissent utiliser leur ordinateur personnel et pour leur expliquer tout ce dont ils avaient besoin sur \textit{Git} et autres. C'était peut-être un peu compliqué pour eux, car après plusieurs propositions, je n'ai pas eu de clé USB de leur part. J'ai donc été le seul à publier le code sur \textit{GitHub}.
 	\subsubsection{Langages}
 	\paragraph{}
-	Notre projet possède une complexité qui réside dans le nombre important de langages que nous utilisons. En effet, nous avons eu besoin des languages suivant : Python3, PHP (PHP: Hypertext Preprocessor), HTML5 (HyperText Markup Language), JS (JavaScript), CSS3 (Cascading Style Sheets) et le SQL (Structured Query Language).
+	Notre projet possède une complexité qui réside dans le nombre important de langages que nous utilisons. En effet, nous avons eu besoin des languages suivant : Python3, PHP (PHP: Hypertext Preprocessor), HTML5 (HyperText Markup Language), JS (JavaScript), CSS3 (Cascading Style Sheets) et le SQL (Structured Query Language).\\
 	
 	\begin{itemize}
 		\item[\textbf{Python3}] Le Python3 a été utilisé pour une grande partie du projet notamment dans la communication entre le "server" et les "devices" ainsi que dans la génération du son.
@@ -84,11 +88,12 @@
 	\end{itemize}
 	\subsubsection{Communication}
 	\paragraph{}
-	Afin de faire communiquer les parties entre elles, nous avons utiliser plusieurs moyens.
+	Afin de faire communiquer les parties entre elles, nous avons utiliser plusieurs moyens.\\
+	
 	\begin{itemize}
 		\item[\textbf{Wi-Fi/UDP/IP}] Ce sont les protocoles utilisés pour la communication entre les "devices" et le "server".
 		\item[\textbf{JSON}] C'est la façon dont nous envoyons la configuration à la page permettant de l'enregistrer via une requête "POST".
-		\item[\textbf{MusicSwaggerProtocol}] C'est le protocole que nous avons inventer afin de pouvoir faire communiquer les "devices" et le "server" basé sur UDP/IP.
+		\item[\textbf{MusicSwaggerProtocol}] C'est le protocole que nous avons inventé afin de pouvoir faire communiquer les "devices" et le "server" basé sur UDP/IP.
 	\end{itemize}
 	\subsubsection{Source d'information}
 	\paragraph{}
@@ -102,6 +107,12 @@
 	Nous utiliserons ensuite les termes suivants : "device" pour qualifier l'ensemble Raspberry Pi et capteur, "server" pour l'ensemble serveur Web et serveur Python3.
 	Pour permettre la communication entre les "devices" et le "server", nous avons opter pour un système de liaison par Wi-Fi, et des "devices" à base de Raspberry Pi Zero W pour la portabilité et le prix. Une interface Web sera mise en place afin de pouvoir configurer le comportement de façon simple et sans besoin d'application particulière. Nous avons choisis d'utiliser Python3 pour sa simplicité, sa portabilité ainsi que la richesse de ses modules. L'interface Web est composée de PHP pour l'interaction avec la base de donnée et l'HTML, JS et CSS pour la mise en forme et les interactions avec l'utilisateur (notamment avec le système de "Nodes" en "drag\&drop").
 	\subsection{Le rôle de chacun}
+	\paragraph{}
+	Afin d’utiliser au mieux les compétences de chacun, il a fallu discuter de ce que chacun souhaitait faire et pouvait faire. Estelle débutait en informatique, Nour avait quelques compétences en programmation et moi qui est passionné par l’informatique je connaissais l’ensemble des langages et outils à utiliser pour réaliser notre projet.
+	
+	\paragraph{}
+	J’ai pris à ma charge les développements les plus complexes (et les plus longs à développer) du projet, notamment une partie du "server" qui permet de générer du son ainsi que la partie "device" et la communication entre les deux. En effet, j'avais déjà quelques notions de communication réseau.\\
+	
 	\noindent
 	\begin{tabular}{|p{0.4\textwidth}|p{0.2\textwidth}|p{0.3\textwidth}|}
 		\hline
@@ -125,16 +136,10 @@
 	\includegraphics[width=\textwidth]{overall_sheme}
 	\vspace{1cm}
 	\begin{itemize}
-		\item[\textbf{"device"}] C'est la partie englobant le capteur, le "DeviceBrain" et une partie de communication. Elle communique avec le "server" grâce à un "communicator" (interface de transfert de donnée par réseau (Wi-Fi) sur UDP/IP).\\
-		\item[\textbf{"server"}] C'est la partie qui permet de générer le son, la réelle partie qui met en forme et concrétise le projet. Elle contient une partie de génération de son, une partie de structuration des modifications du son et d'une partie de communication avec les "devices". Elle a un accès à la base de donnée du "configurator" pour générer du son en fonction de ce que l'utilisateur désire.\\
-		\item[\textbf{"configurator"}] C'est l'interface Web basé sur un serveur \textit{LAMP}, indépendante du reste du projet par ses langages (différent de Python3). Elle communique ses données à travers une base de donnée. Elle est intuitive et fonctionne par "drag\&drop" de boites et liens.
+		\item[\textbf{"device"}] C'est la partie englobant le capteur, le "DeviceBrain" et une partie de communication. Elle communique avec le "server" grâce à un "communicator" (interface de transfert de donnée par réseau Wi-Fi sur UDP/IP).\\
+		\item[\textbf{"server"}] C'est la partie qui permet de générer le son, elle met en forme et concrétise le projet. Elle contient une partie de génération de son, une partie de structuration des modifications du son et d'une partie de communication avec les "devices". Elle a un accès à la base de données du "configurator" pour générer du son en fonction de ce que l'utilisateur désire.\\
+		\item[\textbf{"configurator"}] C'est l'interface Web basé sur un serveur \textit{LAMP}, indépendante du reste du projet par ses langages (différent de Python3). Elle communique ses données à travers une base de données. Elle est intuitive et fonctionne par "drag\&drop" de boites et liens.
 	\end{itemize}
-	
-	\paragraph{}
-	Afin d’utiliser au mieux les compétences de chacun, il a fallu discuter de ce que chacun souhaitait faire et pouvait faire. Estelle débutait en informatique, Nour avait quelques compétences en programmation et moi qui est passionné par l’informatique je connaissais l’ensemble des langages et outils à utiliser pour réaliser notre projet.
-	
-	\paragraph{}
-	J’ai pris à ma charge les développements les plus complexes (et les plus longs à développer) du projet, notamment une partie du "server" qui permet de générer du son ainsi que la partie "device" et la communication entre les deux. En effet, j'avais déjà quelques notions de communication réseau.
 	
 	\paragraph{}
 	Je me suis dès le début chargé de structurer proprement le projet et de définir des interfaces simples et abstraites afin de faciliter le travail de chacun qui n'aurait alors qu'à s'occuper de sa partie en utilisant des fonctions simples et explicites. Exemple :
@@ -143,7 +148,7 @@
 	Chaque partie est délimitée par une classe Python.
 	
 	\paragraph{}
-	Plus précisément, j'ai développé la partie de communication qui est présente du coté "device" et "server". Celle-ci s'occupe de toute la communication, le "server" et le "device" ne s'occupent de rien au niveau du réseau. Le "server" reçoit simplement une notification et les données envoyées par un "device" par le biais d'un "callback", c'est-à-dire une fonction qui est appelée lorsqu'un événement se passe. Le "communicator" possède son propre "Thread" ce qui lui permet de ne pas interférer avec la génération du son par exemple.
+	Plus précisément, j'ai développé la partie de communication qui est présente du coté "device" et "server". Celle-ci s'occupe de toute la communication, le "server" et le "device" ne s'occupent de rien au niveau du réseau. Le "server" reçoit simplement une notification et les données envoyées par un "device" par le biais d'un "callback", c'est-à-dire une fonction qui est appelée lorsqu'un événement se passe. Le "communicator" possède son propre "Thread" ce qui lui permet de ne pas interférer avec la génération du son par exemple. (Voir annexes pour plus d'information sur la communication.)
 	
 	\vspace{1cm}
 	\noindent
@@ -151,7 +156,7 @@
 	\vspace{1cm}
 	
 	\paragraph{}
-	J'ai aussi développé la partie "device" qui fait le lien entre la partie "sensor" et "communicator". Cette partie est lancée au démarrage des RPi et permet au "device" de commencer son fonctionnement.
+	J'ai aussi développé la partie "device" qui fait le lien entre la partie capteur et "communicator". Cette partie est lancée au démarrage des Raspberry Pi et permet au "device" de commencer son fonctionnement.
 	
 	\paragraph{}
 	Aussi, j'ai réalisé la partie de génération du son dans le "server". Ainsi, ce dernier peut aller chercher la dernière configuration disponible dans la base de données, retracer la structure en arbre ayant pour racine la sortie du son et générer à partir de là des portions de son de 50ms (intervalle minimal pour pouvoir avoir une période complète de la plus basse fréquence audible). Il est donc doté d'une partie permettant la lecture de son et d'une partie permettant la génération de son. De plus, une interface simple est disponible pour créer des "boxes" qui permettent de prendre un(des) son(s) ou une(des) valeur(s) et de les traiter. Chaque "box" représente un nœud de l'arbre.
@@ -177,10 +182,10 @@
 	
 	Enfin, le son est émis et peut être entendu.
 	\subsection{Évolution}
-	Le projet même si fonctionnel, est largement améliorable. En effet, tout l'intérêt de ce projet est qu'il est extrêmement modulaire et très facilement améliorable. De plus, de nouveaux "devices" peuvent être implémentés en quelques lignes et de nouveau modificateurs de son pourraient être aisément ajoutés. Une fonctionnalité de partage de configuration sur internet pourrait être très inintéressante, ce qui permettrait en plus de pouvoir sauvegarder et restaurer une configuration. Enfin, une fonctionnalité d'import de fichier son pourrait être un point amusant.
+	Le projet est fonctionnel mais il peut être amélioré. En effet, tout l'intérêt de ce projet est qu'il est extrêmement modulaire et très facilement améliorable. De plus, de nouveaux "devices" peuvent être implémentés en quelques lignes (détecteur de CO2, ...) et de nouveaux modificateurs de son pourraient être aisément ajoutés. Une fonctionnalité de partage de configuration sur internet pourrait être très inintéressante, ce qui permettrait en plus de pouvoir sauvegarder et restaurer une configuration. Enfin, une fonctionnalité d'import de fichiers son pourrait être un point à ajouter.
 	
 	\subsection{Bilan}
-	Les premiers enseignements ont été riches. Nous nous sommes lancés dans une projet intéressant mais ambitieux. Nous avons beaucoup discuté du projet en cours d'ISN, mais aussi au CDI, et de nos discussions, je pensais que nous avions tous la même vision de ce qu'il fallait faire même si nous n'avancions pas au même rythme. Je ne me suis rendu compte que tardivement qu'Estelle et Nour avaient du mal à avancer et je leur ai apporté mon support pour les aider à programmer en leur expliquant comment il fallait faire.
+	Les premiers enseignements ont été riches. Nous nous sommes lancés dans une projet intéressant mais ambitieux. Nous avons beaucoup discuté du projet en cours d'ISN, mais aussi au CDI, et de nos discussions, je pensais que nous avions tous la même vision de ce qu'il fallait faire même si nous n'avancions pas au même rythme. Je ne me suis rendu compte que tardivement qu'Estelle et Nour avaient plus de mal à avancer et je leur ai apporté mon support pour les aider à programmer en leur expliquant comment il fallait faire.
 	
 	\paragraph{}
 	De plus, l'arrivée tardive du code de Nour et Estelle n'a permis de faire l'intégration de l'ensemble que tardivement, ce qui a nécessité de reprendre des parties de code déjà rédigées. C'est une partie du projet que je n'avais pas envisagé de cette façon : cela m'a pris beaucoup de temps en plus de ce qui était à faire et je pense que les outils collaboratifs auraient du être utilisés plus tôt pour échanger plus vite sur les problématiques rencontrées. Afin d'améliorer l'avancement du projet, il aurait fallu rédiger un cahier des charges détaillé dès le début du projet et peut-être travailler sur un projet moins complexe : le projet nous a séduit tous les trois, mais je crois que j'étais le seul en début de projet à bien appréhender la complexité des développements.
@@ -190,7 +195,10 @@
 	
 	
 	\paragraph{}
-	Le bilan reste très positif, le projet fonctionne bien conformément aux objectifs que nous nous étions fixés et j'ai beaucoup appris sur le travail collaboratif. Plus globalement, j'ai discuté et travaillé ponctuellement avec plusieurs personnes dans différents projets et j'ai tiré une grande satisfaction de pouvoir donner des idées, apporter un support aux différentes équipes qui pour certaines ont quelques lignes de code que j'ai pu rédiger.
+	Le bilan reste très positif, le projet fonctionne bien conformément aux objectifs que nous nous étions fixés et j'ai beaucoup appris sur le travail collaboratif. Plus globalement, j'ai aussi discuté et travaillé ponctuellement avec plusieurs personnes dans différents projets et j'ai tiré une grande satisfaction de pouvoir donner des idées, apporter un support aux différentes équipes qui pour certaines ont quelques lignes de code que j'ai pu rédiger.
+	
+	\paragraph{}
+	Voici un bilan très synthétique du projet.
 	
 	\vspace{1cm}
 	\noindent
@@ -198,7 +206,7 @@
 	\vspace{1cm}
 	
 	\subsection{Licence}
-	Ce projet est en open-source, sous la licence GPLv3, cela veut dire que n’importe qui est libre d’utiliser, de copier, de modifier et de distribuer le projet source ou dérivé, même pour de l’argent. Cependant en cas de modification, le résultat doit être placé sous la même Licence. Nous avons choisi cette licence d’abord car elle est gratuite, et ensuite car nous voulions que notre projet puisse évoluer au maximum de ses capacité et parce que nous ne sommes pas contre l’idée que quelqu’un puisse commercialiser notre projet si cela lui permet d’évoluer. C’est également dans cette optique que nous avons rendu le code disponible sur GitHub, permettant à n’importe qui de proposer des ajouts.
+	Ce projet est en open-source, sous la licence GPLv3, cela veut dire que n’importe qui est libre d’utiliser, de copier, de modifier et de distribuer le projet source ou dérivé, même pour de l’argent. Cependant en cas de modification, le résultat doit être placé sous la même licence. Nous avons choisi cette licence d’abord car elle est gratuite, et ensuite car nous voulions que notre projet puisse évoluer au maximum de ses capacités et parce que nous ne sommes pas contre l’idée que quelqu’un puisse commercialiser notre projet. C’est également dans cette optique que nous avons rendu le code disponible sur GitHub, permettant à n’importe qui de proposer des ajouts.
 	\newpage
 	\section*{Annexes}
 	\subsection*{Music Swagger Protocol}
