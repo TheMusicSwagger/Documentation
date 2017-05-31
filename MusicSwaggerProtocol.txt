@@ -1,8 +1,11 @@
 MusicSwaggerProtocol v1.0 definition :
     - based on UDP/IP
     - simplest possible (shortest)
-    - Server's hostname : "musicswagger_server"
-    - port : 55666
+    
+    - broadcast every packets
+    
+    - Server Port : 55666
+    - Device Port : 55665
 
 Data representation :
     | DEST CUID | SRC CUID | OP NUM | DATA LEN | DATA | ( CRC |)

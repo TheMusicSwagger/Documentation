@@ -1,0 +1,90 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+MusicSwaggerProtocol v1.0 definition :
+    \PYGZhy{} based on UDP/IP
+    \PYGZhy{} simplest possible (shortest)
+    
+    \PYGZhy{} broadcast every packets
+    
+    \PYGZhy{} Server Port : 55666
+    \PYGZhy{} Device Port : 55665
+
+Data representation :
+    | DEST CUID | SRC CUID | OP NUM | DATA LEN | DATA | ( CRC |)
+    | (8b)      | (8b)     | (8b)   | (8b)     | (8b) | ( (8b)|)
+
+    \PYGZhy{} DESTination Connection Unique Identifier : the CUID of the destination of the packet (0x00 is the server, 0xff is no one particularly)
+    \PYGZhy{} SouRCe CUID : the CUID of the source of the packet
+    \PYGZhy{} OPeration NUMber : number describing which operation is given
+    \PYGZhy{} DATA LENgth : the size of the data following in bytes
+    \PYGZhy{} DATA : the actual data of the packet, formatted as the OP requires to
+    (\PYGZhy{} CRC)
+
+Constants :
+    \PYGZhy{} DATA\PYGZus{}VALUE\PYGZus{}SIZE = 0x20
+    \PYGZhy{}
+
+Operations list :
+    \PYGZhy{} OP NUM = OP NAME :
+        \PYGZhy{} Description...
+        | DATA DESC    |
+        | (SIZE in bit)|
+        \PYGZhy{} PARAMETER :
+            \PYGZhy{} OPTION : DESC
+
+    \PYGZhy{} 0x00 = INFO :
+        \PYGZhy{} Generally for server response, give some info about the situation
+        | ID  | INFO |
+        | (8b)| (...)|
+        \PYGZhy{} ID :
+            \PYGZhy{} 0x00 : Nothing to say
+            \PYGZhy{} 0x01 : Packet error
+            \PYGZhy{} 0x02 : Invalid CUID
+            \PYGZhy{} 0x03 : Not supposed to receive that
+            \PYGZsh{} \PYGZhy{} 0x04 : I\PYGZsq{}m still alive ! (if not received for 1min : forgetting the device)
+            \PYGZsh{} TODO
+        \PYGZhy{} INFO :
+            Some text about the situation (ASCII).
+
+    \PYGZhy{} 0x01 = IAMNEW :
+        \PYGZhy{} When you start a device that needs a CUID to communicate over the network
+        | GUID   |
+        | (128b) |
+        \PYGZhy{} GUID :
+            The GUID of the device
+
+
+    \PYGZhy{} 0x02 = YOURETHIS :
+        \PYGZhy{} Server response to a 0x01 (give CUID)
+        | GUID   | CUID |
+        | (128b) | (8b) |
+        \PYGZhy{} GUID :
+            The GUID of the device
+        \PYGZhy{} CUID :
+            The new CUID of the device
+
+    \PYGZhy{}0x03 = MYSPEC :
+        \PYGZhy{} give the device specs to server
+        | NCHAN | NLEN | DLEN | NAME   | DESC   |
+        | (8b)  | (8b) | (8b) | (NLENb)| (DLENb)|
+        \PYGZhy{} NCHAN :
+            The number of channel available
+        \PYGZhy{} NLEN :
+            The length of the device name
+        \PYGZhy{} DLEN :
+            The length of the description
+        \PYGZhy{} NAME :
+            The name of the device (utf8)
+        \PYGZhy{} DESC :
+            The description of the device (utf8)
+
+
+    \PYGZhy{} 0x10 = GIVE DATA
+        \PYGZhy{} When device need to give data to server (can\PYGZsq{}t work before a MYSPEC packet)
+        | CHAN1            | ... |
+        | (DATA\PYGZus{}VALUE\PYGZus{}SIZE)| ... |
+        \PYGZhy{} CHAN1, ... :
+            The values of each chanel
+
+    \PYGZhy{} 0x20 = GOODBYE
+        \PYGZhy{} Before the device is turned off
+\end{Verbatim}
