@@ -1,0 +1,497 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{time}\PYG{o}{,} \PYG{n+nn}{random}\PYG{o}{,} \PYG{n+nn}{threading}\PYG{o}{,} \PYG{n+nn}{uuid}\PYG{o}{,} \PYG{n+nn}{os}\PYG{o}{,} \PYG{n+nn}{ctypes}
+\PYG{k+kn}{from} \PYG{n+nn}{dev\PYGZus{}config} \PYG{k+kn}{import} \PYG{n}{Config} \PYG{k}{as} \PYG{n}{cfg}
+\PYG{k+kn}{from} \PYG{n+nn}{communicator.communicator} \PYG{k+kn}{import} \PYG{n}{Communicator}
+
+
+\PYG{k}{class} \PYG{n+nc}{Device}\PYG{p}{(}\PYG{n+nb}{object}\PYG{p}{):}
+    \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    C\PYGZsq{}est une classe permettant de definir clairement les caracteristiques d\PYGZsq{}un device, et de servir d\PYGZsq{}interface entre chaque device et d\PYGZsq{}autres parties comme des controlleurs.}
+\PYG{l+s+sd}{    Elle ne contient pas d\PYGZsq{}implementation mais uniquement la structure.}
+\PYG{l+s+sd}{    Il est recommande d\PYGZsq{}utiliser uniquement ces fonction et non celles ajoutees par une potentielle implementation pour des problemes de compatibilite.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{num\PYGZus{}of\PYGZus{}chanels} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} entier indiquant le nombre de \PYGZdq{}chanels\PYGZdq{} disponibles sur le device.}
+    \PYG{n}{chanels} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} liste de \PYGZsq{}SensorValue\PYGZsq{} representant les dernieres valeurs enregistrees}
+    \PYG{n}{status} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} chaine de caractere definissant le statut actuel du device}
+    \PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{description} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}
+
+    \PYG{c+c1}{\PYGZsh{} name and description of the device}
+
+    \PYG{k}{def} \PYG{n+nf}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{(}\PYG{n}{Device}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{p}{)}\PYG{o}{.}\PYG{n}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}status}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.status\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{status}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}fresh\PYGZus{}values}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Cette fonction va simplement rafraichir les donees avant de les retourner.}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.get\PYGZus{}value()\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{refresh}\PYG{p}{()}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}values}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}values}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Use the cfg to format values !}
+\PYG{l+s+sd}{        :return: array of formatted values}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{new\PYGZus{}format} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2} \PYG{o}{**} \PYG{n}{cfg}\PYG{o}{.}\PYG{n}{DATA\PYGZus{}VALUE\PYGZus{}SIZE} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{k}{return} \PYG{p}{[}\PYG{n}{val}\PYG{o}{.}\PYG{n}{get\PYGZus{}formated\PYGZus{}values}\PYG{p}{(}\PYG{n}{new\PYGZus{}format}\PYG{p}{)} \PYG{k}{for} \PYG{n}{val} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{chanels}\PYG{p}{]}
+
+    \PYG{k}{def} \PYG{n+nf}{refresh}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Cette fonction va tenter de recuperer des donnees \PYGZdq{}fraiches\PYGZdq{} et les stocker dans la self.last\PYGZus{}value.}
+\PYG{l+s+sd}{        WARNING : Elle peut donc prendre un certain temps a s\PYGZsq{}executer !}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{raise} \PYG{n+ne}{NotImplementedError}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}num\PYGZus{}of\PYGZus{}chanels}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.num\PYGZus{}of\PYGZus{}chanels\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{num\PYGZus{}of\PYGZus{}chanels}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}name}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}description}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{description}
+
+
+\PYG{k}{class} \PYG{n+nc}{ThreadedDevice}\PYG{p}{(}\PYG{n}{Device}\PYG{p}{,} \PYG{n}{threading}\PYG{o}{.}\PYG{n}{Thread}\PYG{p}{):}
+    \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Une version sur thread de device (dans le cas ou l\PYGZsq{}appareil aurait besoin d\PYGZsq{}un rafraichissement constant.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{is\PYGZus{}killed} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} booleen qui permet de stopper la boucle principal du thread et donc de l\PYGZsq{}arreter}
+    \PYG{n}{is\PYGZus{}running} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} booleen qui permet de mettre en pause le thread}
+    \PYG{n}{refresh\PYGZus{}interval} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} interval de relancement de \PYGZsq{}self.refresh\PYGZsq{} (must be over 50 because of the music sample)}
+    \PYG{n}{callback} \PYG{o}{=} \PYG{n+nb+bp}{None}
+
+    \PYG{c+c1}{\PYGZsh{} called when refresh is finished}
+
+    \PYG{k}{def} \PYG{n+nf}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{refresh\PYGZus{}interval}\PYG{p}{,} \PYG{n}{callback}\PYG{o}{=}\PYG{n+nb+bp}{None}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{(}\PYG{n}{ThreadedDevice}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{p}{)}\PYG{o}{.}\PYG{n}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{daemon} \PYG{o}{=} \PYG{n+nb+bp}{True}
+        \PYG{c+c1}{\PYGZsh{} not waiting thread to stop before exiting program}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{set\PYGZus{}refresh\PYGZus{}interval}\PYG{p}{(}\PYG{n}{refresh\PYGZus{}interval}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}running} \PYG{o}{=} \PYG{n+nb+bp}{False}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}killed} \PYG{o}{=} \PYG{n+nb+bp}{False}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{set\PYGZus{}callback}\PYG{p}{(}\PYG{n}{callback}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{init}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{start}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{init}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Implement if the device you need initialisation}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{return}
+
+    \PYG{k}{def} \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Fonction execute dans un different thread.}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}running} \PYG{o}{=} \PYG{n+nb+bp}{True}
+        \PYG{k}{while} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}killed}\PYG{p}{:}
+            \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{refresh\PYGZus{}interval} \PYG{o}{/} \PYG{l+m+mi}{1000}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}running}\PYG{p}{:}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{refresh}\PYG{p}{()}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{callback} \PYG{o+ow}{is} \PYG{o+ow}{not} \PYG{n+nb+bp}{None}\PYG{p}{:}
+                    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{callback}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{pause}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Pause the refreshing.}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}running} \PYG{o}{=} \PYG{n+nb+bp}{False}
+
+    \PYG{k}{def} \PYG{n+nf}{play}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Allow to refresh.}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}running} \PYG{o}{=} \PYG{n+nb+bp}{True}
+
+    \PYG{k}{def} \PYG{n+nf}{kill}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Stop the thread.}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{pause}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{is\PYGZus{}killed} \PYG{o}{=} \PYG{n+nb+bp}{True}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{join}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{set\PYGZus{}refresh\PYGZus{}interval}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{refresh\PYGZus{}interval}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{refresh\PYGZus{}interval} \PYG{o}{=} \PYG{n}{refresh\PYGZus{}interval}
+
+    \PYG{k}{def} \PYG{n+nf}{set\PYGZus{}callback}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{callback}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{callback} \PYG{o}{=} \PYG{n}{callback}
+
+
+\PYG{k}{class} \PYG{n+nc}{DeviceChanel}\PYG{p}{(}\PYG{n+nb}{object}\PYG{p}{):}
+    \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Petite classe permettant de stocker en plus de la derniere valeur, l\PYGZsq{}interval de valeurs possibles.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{value\PYGZus{}range} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} liste de deux elements representant intervalle de valeurs possibles}
+    \PYG{n}{last\PYGZus{}value} \PYG{o}{=} \PYG{l+m+mi}{0}
+
+    \PYG{c+c1}{\PYGZsh{} entier representant la valeur actuelle du sensor}
+
+    \PYG{k}{def} \PYG{n+nf}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{value\PYGZus{}range}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range} \PYG{o}{=} \PYG{n}{value\PYGZus{}range}
+
+    \PYG{k}{def} \PYG{n+nf}{set\PYGZus{}value}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{value}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :param value: nouvelle valeur}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{if} \PYG{n}{value} \PYG{o}{\PYGZlt{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]:}
+            \PYG{n}{value} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+        \PYG{k}{if} \PYG{n}{value} \PYG{o}{\PYGZgt{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]:}
+            \PYG{n}{value} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{last\PYGZus{}value} \PYG{o}{=} \PYG{n}{value}
+
+    \PYG{k}{def} \PYG{n+nf}{check\PYGZus{}range}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{value}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{\PYGZlt{}=} \PYG{n}{value} \PYG{o}{\PYGZlt{}=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}value}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.last\PYGZus{}value\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{last\PYGZus{}value}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}range}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.value\PYGZus{}range\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{value\PYGZus{}range}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}formated\PYGZus{}values}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{new\PYGZus{}format}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :param new\PYGZus{}format: liste 2 elements [min,max]}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.get\PYGZus{}value()\PYGZsq{} formate avec l\PYGZsq{}interval \PYGZsq{}new\PYGZus{}format\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}value}\PYG{p}{()} \PYG{o}{!=} \PYG{n+nb+bp}{None}\PYG{p}{:}
+            \PYG{k}{return} \PYG{n+nb}{int}\PYG{p}{((((}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}value}\PYG{p}{()} \PYG{o}{\PYGZhy{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}range}\PYG{p}{()[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{*} \PYG{p}{(}\PYG{n}{new\PYGZus{}format}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{new\PYGZus{}format}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]))} \PYG{o}{/} \PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}range}\PYG{p}{()[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}range}\PYG{p}{()[}\PYG{l+m+mi}{0}\PYG{p}{]))} \PYG{o}{+} \PYG{n}{new\PYGZus{}format}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}
+        \PYG{k}{return} \PYG{n+nb+bp}{None}
+
+
+\PYG{k}{class} \PYG{n+nc}{Random2Device}\PYG{p}{(}\PYG{n}{ThreadedDevice}\PYG{p}{):}
+    \PYG{n}{num\PYGZus{}of\PYGZus{}chanels} \PYG{o}{=} \PYG{l+m+mi}{2}
+    \PYG{n}{chanels} \PYG{o}{=} \PYG{p}{[}\PYG{n}{DeviceChanel}\PYG{p}{([}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{100}\PYG{p}{,} \PYG{l+m+mi}{100}\PYG{p}{])} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{num\PYGZus{}of\PYGZus{}chanels}\PYG{p}{)]}
+    \PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}MyRandom2Device\PYGZdq{}}
+    \PYG{n}{description} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}This is a test device giving random values.\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf}{init}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{status} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Started !\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf}{refresh}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{for} \PYG{n}{chan} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{chanels}\PYG{p}{:}
+            \PYG{n}{ran} \PYG{o}{=} \PYG{n}{chan}\PYG{o}{.}\PYG{n}{get\PYGZus{}range}\PYG{p}{()}
+            \PYG{n}{chan}\PYG{o}{.}\PYG{n}{set\PYGZus{}value}\PYG{p}{(}\PYG{n}{random}\PYG{o}{.}\PYG{n}{randint}\PYG{p}{(}\PYG{n}{ran}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{ran}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{status} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Refreshed to : \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}values}\PYG{p}{())}
+
+
+\PYG{k}{class} \PYG{n+nc}{HCSR04Device}\PYG{p}{(}\PYG{n}{ThreadedDevice}\PYG{p}{):}
+    \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    HCSR04 device : distance ultrason (RPi GPIO seulement)}
+\PYG{l+s+sd}{    (https://electrosome.com/hc\PYGZhy{}sr04\PYGZhy{}ultrasonic\PYGZhy{}sensor\PYGZhy{}raspberry\PYGZhy{}pi/)}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{num\PYGZus{}of\PYGZus{}chanels} \PYG{o}{=} \PYG{l+m+mi}{1}
+    \PYG{n}{chanels} \PYG{o}{=} \PYG{p}{[}\PYG{n}{DeviceChanel}\PYG{p}{([}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{200}\PYG{p}{])]}
+    \PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}HCSR04UltrasonicGPIOSensor\PYGZdq{}}
+    \PYG{n}{description} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Implementation for the HCSR04 ultrasonic sensor giving a distance based on an echo sound.\PYGZdq{}}
+    \PYG{n}{GPIO} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} gpio library pointer}
+    \PYG{n}{timeout} \PYG{o}{=} \PYG{l+m+mi}{1000}
+
+    \PYG{c+c1}{\PYGZsh{} timeout for sensor in ms}
+    \PYG{k}{def} \PYG{n+nf}{init}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k+kn}{import} \PYG{n+nn}{RPi.GPIO}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO} \PYG{o}{=} \PYG{n}{RPi}\PYG{o}{.}\PYG{n}{GPIO}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{setmode}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{BCM}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{trigger\PYGZus{}pin} \PYG{o}{=} \PYG{l+m+mi}{23}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{echo\PYGZus{}pin} \PYG{o}{=} \PYG{l+m+mi}{24}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{setup}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{trigger\PYGZus{}pin}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{OUT}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{setup}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{echo\PYGZus{}pin}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{IN}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{refresh}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{beginning} \PYG{o}{=} \PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{output}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{trigger\PYGZus{}pin}\PYG{p}{,} \PYG{n+nb+bp}{False}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mf}{0.1}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{output}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{trigger\PYGZus{}pin}\PYG{p}{,} \PYG{n+nb+bp}{True}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mf}{0.00001}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{output}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{trigger\PYGZus{}pin}\PYG{p}{,} \PYG{n+nb+bp}{False}\PYG{p}{)}
+        \PYG{n}{pulse\PYGZus{}start}\PYG{p}{,} \PYG{n}{pulse\PYGZus{}end} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}
+        \PYG{k}{while} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{input}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{echo\PYGZus{}pin}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+            \PYG{n}{pulse\PYGZus{}start} \PYG{o}{=} \PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{()}
+            \PYG{k}{if} \PYG{n}{pulse\PYGZus{}start} \PYG{o}{\PYGZhy{}} \PYG{n}{beginning} \PYG{o}{\PYGZgt{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{timeout} \PYG{o}{/} \PYG{l+m+mi}{1000}\PYG{p}{:}
+                \PYG{k}{return}
+        \PYG{k}{while} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{input}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{echo\PYGZus{}pin}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+            \PYG{n}{pulse\PYGZus{}end} \PYG{o}{=} \PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{()}
+            \PYG{k}{if} \PYG{n}{pulse\PYGZus{}end} \PYG{o}{\PYGZhy{}} \PYG{n}{pulse\PYGZus{}start} \PYG{o}{\PYGZgt{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{timeout} \PYG{o}{/} \PYG{l+m+mi}{1000}\PYG{p}{:}
+                \PYG{k}{return}
+        \PYG{n}{pulse\PYGZus{}duration} \PYG{o}{=} \PYG{n}{pulse\PYGZus{}end} \PYG{o}{\PYGZhy{}} \PYG{n}{pulse\PYGZus{}start}
+        \PYG{n}{distance} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{pulse\PYGZus{}duration} \PYG{o}{*} \PYG{l+m+mi}{17000}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{chanels}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{set\PYGZus{}value}\PYG{p}{(}\PYG{n}{distance}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{kill}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{(}\PYG{n}{HCSR04Device}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{p}{)}\PYG{o}{.}\PYG{n}{kill}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{GPIO}\PYG{o}{.}\PYG{n}{cleanup}\PYG{p}{()}
+
+
+\PYG{k}{class} \PYG{n+nc}{L3GD20Device}\PYG{p}{(}\PYG{n}{ThreadedDevice}\PYG{p}{):}
+    \PYG{c+c1}{\PYGZsh{} constants}
+    \PYG{n}{L3GD20\PYGZus{}ADDRESS} \PYG{o}{=} \PYG{l+m+mh}{0x6B}
+    \PYG{n}{L3GD20\PYGZus{}POLL\PYGZus{}TIMEOUT} \PYG{o}{=} \PYG{l+m+mi}{100}
+    \PYG{n}{L3GD20\PYGZus{}ID} \PYG{o}{=} \PYG{l+m+mh}{0xD4}
+    \PYG{n}{L3GD20H\PYGZus{}ID} \PYG{o}{=} \PYG{l+m+mh}{0xD7}
+
+    \PYG{n}{L3GD20\PYGZus{}REGISTERS} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+        \PYG{l+s+s2}{\PYGZdq{}WHO\PYGZus{}AM\PYGZus{}I\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x0F}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG1\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x20}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG2\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x21}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG3\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x22}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG4\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x23}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG5\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x24}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}REFERENCE\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x25}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}TEMP\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x26}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}STATUS\PYGZus{}REG\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x27}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}X\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x28}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}X\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x29}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Y\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x2A}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Y\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x2B}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Z\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x2C}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Z\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x2D}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}FIFO\PYGZus{}CTRL\PYGZus{}REG\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x2E}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}FIFO\PYGZus{}SRC\PYGZus{}REG\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x2F}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}INT1\PYGZus{}CFG\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x30}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}INT1\PYGZus{}SRC\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x31}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TSH\PYGZus{}XH\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x32}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TSH\PYGZus{}XL\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x33}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TSH\PYGZus{}YH\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x34}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TSH\PYGZus{}YL\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x35}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TSH\PYGZus{}ZH\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x36}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TSH\PYGZus{}ZL\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x37}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}INT1\PYGZus{}DURATION\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x38}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{n}{L3GD20\PYGZus{}SENSIBILITY} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+        \PYG{l+s+s2}{\PYGZdq{}250DPS\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mf}{0.00875}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}500DPS\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mf}{0.0175}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}2000DPS\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mf}{0.07}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{n}{L3GD20\PYGZus{}RANGE} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+        \PYG{l+s+s2}{\PYGZdq{}250DPS\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x00}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}500DPS\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x10}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}2000DPS\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x20}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+c1}{\PYGZsh{} default sensitivity}
+    \PYG{n}{sensibility} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}250DPS\PYGZdq{}}
+
+    \PYG{c+c1}{\PYGZsh{} used to send and receive with from sensor}
+    \PYG{n}{bus} \PYG{o}{=} \PYG{n+nb+bp}{None}
+
+    \PYG{n}{num\PYGZus{}of\PYGZus{}chanels} \PYG{o}{=} \PYG{l+m+mi}{4}
+    \PYG{n}{chanels} \PYG{o}{=} \PYG{p}{[}\PYG{n}{DeviceChanel}\PYG{p}{([}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2} \PYG{o}{**} \PYG{l+m+mi}{16}\PYG{p}{])} \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{)]} \PYG{o}{+} \PYG{p}{[}\PYG{n}{DeviceChanel}\PYG{p}{([}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{255}\PYG{p}{])]}
+    \PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}L3GD20\PYGZdq{}}
+    \PYG{n}{description} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Implementation for the L3GD20 gyroscope giving the 3D angular speed and the temperature of the sensor.\PYGZdq{}}
+
+    \PYG{n}{smbus} \PYG{o}{=} \PYG{n+nb+bp}{None}
+
+    \PYG{c+c1}{\PYGZsh{} smbus library pointer}
+    \PYG{k}{def} \PYG{n+nf}{init}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k+kn}{import} \PYG{n+nn}{smbus}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{smbus} \PYG{o}{=} \PYG{n}{smbus}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bus} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{smbus}\PYG{o}{.}\PYG{n}{SMBus}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} checking sensor type}
+        \PYG{n+nb}{id} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}WHO\PYGZus{}AM\PYGZus{}I\PYGZdq{}}\PYG{p}{])}
+        \PYG{k}{if} \PYG{n+nb}{id} \PYG{o}{==} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}ID}\PYG{p}{:}
+            \PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Sensor is L3GD20 !\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{elif} \PYG{n+nb}{id} \PYG{o}{==} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20H\PYGZus{}ID}\PYG{p}{:}
+            \PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Sensor is L3GD20H !\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{k}{raise} \PYG{n+ne}{Exception}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Sensor unrecognized !\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} initializing sensor}
+        \PYG{c+c1}{\PYGZsh{} reset to normal}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{write\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG1\PYGZdq{}}\PYG{p}{],} \PYG{l+m+mh}{0x00}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} turn the 3 channels on}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{write\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG1\PYGZdq{}}\PYG{p}{],} \PYG{l+m+mh}{0x0F}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} set resolution to \PYGZdq{}self.sensibility\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{write\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}CTRL\PYGZus{}REG4\PYGZdq{}}\PYG{p}{],} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}RANGE}\PYG{p}{[}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{sensibility}\PYG{p}{])}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}orientation}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}X\PYGZus{}L\PYGZdq{}}\PYG{p}{]),} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}X\PYGZus{}H\PYGZdq{}}\PYG{p}{])}
+        \PYG{n}{y1}\PYG{p}{,} \PYG{n}{y2} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Y\PYGZus{}L\PYGZdq{}}\PYG{p}{]),} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Y\PYGZus{}H\PYGZdq{}}\PYG{p}{])}
+        \PYG{n}{z1}\PYG{p}{,} \PYG{n}{z2} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Z\PYGZus{}L\PYGZdq{}}\PYG{p}{]),} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}Z\PYGZus{}H\PYGZdq{}}\PYG{p}{])}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{((}\PYG{n}{x1} \PYG{o}{|} \PYG{p}{(}\PYG{n}{x2} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8}\PYG{p}{)))}  \PYG{c+c1}{\PYGZsh{} *self.L3GD20\PYGZus{}SENSIBILITY[self.sensibility])}
+        \PYG{n}{y} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{((}\PYG{n}{y1} \PYG{o}{|} \PYG{p}{(}\PYG{n}{y2} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8}\PYG{p}{)))}  \PYG{c+c1}{\PYGZsh{} *self.L3GD20\PYGZus{}SENSIBILITY[self.sensibility])}
+        \PYG{n}{z} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{((}\PYG{n}{z1} \PYG{o}{|} \PYG{p}{(}\PYG{n}{z2} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8}\PYG{p}{)))}  \PYG{c+c1}{\PYGZsh{} *self.L3GD20\PYGZus{}SENSIBILITY[self.sensibility])}
+        \PYG{k}{return} \PYG{p}{[}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{z}\PYG{p}{]}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}temperature}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{t} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}OUT\PYGZus{}TEMP\PYGZdq{}}\PYG{p}{])}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{t} \PYG{o}{\PYGZam{}} \PYG{l+m+mi}{128}\PYG{p}{)} \PYG{o}{!=} \PYG{l+m+mi}{0}\PYG{p}{:}
+            \PYG{n}{t} \PYG{o}{=} \PYG{n}{t} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{256}
+        \PYG{k}{return} \PYG{o}{\PYGZhy{}}\PYG{n}{t} \PYG{o}{+} \PYG{l+m+mi}{128}
+
+    \PYG{k}{def} \PYG{n+nf}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{register}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bus}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte\PYGZus{}data}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}ADDRESS}\PYG{p}{,} \PYG{n}{register}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{write\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{register}\PYG{p}{,} \PYG{n}{value}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bus}\PYG{o}{.}\PYG{n}{write\PYGZus{}byte\PYGZus{}data}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{L3GD20\PYGZus{}ADDRESS}\PYG{p}{,} \PYG{n}{register}\PYG{p}{,} \PYG{n}{value}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{refresh}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{res} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}orientation}\PYG{p}{()} \PYG{o}{+} \PYG{p}{[}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}temperature}\PYG{p}{()]}
+        \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{num\PYGZus{}of\PYGZus{}chanels}\PYG{p}{):}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{chanels}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{set\PYGZus{}value}\PYG{p}{(}\PYG{n}{res}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}
+
+
+\PYG{k}{class} \PYG{n+nc}{GY521}\PYG{p}{(}\PYG{n}{ThreadedDevice}\PYG{p}{):}
+    \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    A I2C sensor which contains a accelerometer, a gyroscope and a thermometer.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{I2C\PYGZus{}ADDRESS} \PYG{o}{=} \PYG{l+m+mh}{0x68}
+    \PYG{n}{I2C\PYGZus{}REGISTERS} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+        \PYG{l+s+s2}{\PYGZdq{}PWR\PYGZus{}MGMT\PYGZus{}1\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x6B}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}XOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x3B}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}XOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x3C}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}YOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x3D}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}YOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x3E}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}ZOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x3F}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}ZOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x40}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TEMP\PYGZus{}OUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x41}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}TEMP\PYGZus{}OUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x42}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}XOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x43}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}XOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x44}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}YOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x45}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}YOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x46}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}ZOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x47}\PYG{p}{,}
+        \PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}ZOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mh}{0x48}\PYG{p}{,}
+
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+c1}{\PYGZsh{} used to send and receive with from sensor}
+    \PYG{n}{bus} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{c+c1}{\PYGZsh{} smbus library pointer}
+    \PYG{n}{smbus} \PYG{o}{=} \PYG{n+nb+bp}{None}
+
+    \PYG{n}{num\PYGZus{}of\PYGZus{}chanels} \PYG{o}{=} \PYG{l+m+mi}{8}
+    \PYG{n}{chanels} \PYG{o}{=} \PYG{p}{[}\PYG{n}{DeviceChanel}\PYG{p}{([}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2} \PYG{o}{**} \PYG{l+m+mi}{16}\PYG{p}{])} \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{)]}
+    \PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}GY521\PYGZdq{}}
+    \PYG{n}{description} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Implementation for the GY521 gyroscope and accelerometer giving the acceleration, angular speed and the temperature of the sensor and also the computed overall acceleration. (ax,ay,az,t,gx,gy,gz,as)\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf}{init}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k+kn}{import} \PYG{n+nn}{smbus}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{smbus} \PYG{o}{=} \PYG{n}{smbus}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bus} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{smbus}\PYG{o}{.}\PYG{n}{SMBus}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} power device up}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{write\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}PWR\PYGZus{}MGMT\PYGZus{}1\PYGZdq{}}\PYG{p}{],} \PYG{l+m+mi}{0}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{register}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bus}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte\PYGZus{}data}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}ADDRESS}\PYG{p}{,} \PYG{n}{register}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{write\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{register}\PYG{p}{,} \PYG{n}{value}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bus}\PYG{o}{.}\PYG{n}{write\PYGZus{}byte\PYGZus{}data}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}ADDRESS}\PYG{p}{,} \PYG{n}{register}\PYG{p}{,} \PYG{n}{value}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}raw\PYGZus{}data}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{ax} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}XOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}XOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{n}{ay} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}YOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}YOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{n}{az} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}ZOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}ACCEL\PYGZus{}ZOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{n}{t} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}TEMP\PYGZus{}OUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}TEMP\PYGZus{}OUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{n}{gx} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}XOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}XOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{n}{gy} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}YOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}YOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{n}{gz} \PYG{o}{=} \PYG{n}{ctypes}\PYG{o}{.}\PYG{n}{c\PYGZus{}int16}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}ZOUT\PYGZus{}H\PYGZdq{}}\PYG{p}{])} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+m+mi}{8} \PYG{o}{|} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{read\PYGZus{}byte}\PYG{p}{(}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{I2C\PYGZus{}REGISTERS}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}GYRO\PYGZus{}ZOUT\PYGZus{}L\PYGZdq{}}\PYG{p}{]))}\PYG{o}{.}\PYG{n}{value}
+        \PYG{k}{return} \PYG{p}{[}\PYG{n}{ax}\PYG{p}{,} \PYG{n}{ay}\PYG{p}{,} \PYG{n}{az}\PYG{p}{,} \PYG{n}{t}\PYG{p}{,} \PYG{n}{gx}\PYG{p}{,} \PYG{n}{gy}\PYG{p}{,} \PYG{n}{gz}\PYG{p}{]}
+
+    \PYG{k}{def} \PYG{n+nf}{refresh}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{raw} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}raw\PYGZus{}data}\PYG{p}{()}
+        \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{):}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{chanels}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{set\PYGZus{}value}\PYG{p}{(}\PYG{n}{raw}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}
+        \PYG{n}{accsum} \PYG{o}{=} \PYG{n+nb}{pow}\PYG{p}{(}\PYG{n+nb}{pow}\PYG{p}{(}\PYG{n}{raw}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{+} \PYG{n+nb}{pow}\PYG{p}{(}\PYG{n}{raw}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{+} \PYG{n+nb}{pow}\PYG{p}{(}\PYG{n}{raw}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],} \PYG{l+m+mi}{2}\PYG{p}{),} \PYG{l+m+mf}{0.5}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{chanels}\PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]}\PYG{o}{.}\PYG{n}{set\PYGZus{}value}\PYG{p}{(}\PYG{n}{accsum}\PYG{p}{)}
+
+
+\PYG{n}{implemented\PYGZus{}devices} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+    \PYG{l+s+s2}{\PYGZdq{}L3GD20Device\PYGZdq{}}\PYG{p}{:} \PYG{n}{L3GD20Device}\PYG{p}{,}
+    \PYG{l+s+s2}{\PYGZdq{}HCSR04Device\PYGZdq{}}\PYG{p}{:} \PYG{n}{HCSR04Device}\PYG{p}{,}
+    \PYG{l+s+s2}{\PYGZdq{}Random2Device\PYGZdq{}}\PYG{p}{:} \PYG{n}{Random2Device}\PYG{p}{,}
+    \PYG{l+s+s2}{\PYGZdq{}GY521\PYGZdq{}}\PYG{p}{:} \PYG{n}{GY521}
+\PYG{p}{\PYGZcb{}}
+
+
+\PYG{k}{class} \PYG{n+nc}{DeviceBrain}\PYG{p}{(}\PYG{n+nb}{object}\PYG{p}{):}
+    \PYG{n}{global\PYGZus{}uid} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{n}{device} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{n}{communicator} \PYG{o}{=} \PYG{n+nb+bp}{None}
+
+    \PYG{k}{def} \PYG{n+nf}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{device}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n}{os}\PYG{o}{.}\PYG{n}{path}\PYG{o}{.}\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{cfg}\PYG{o}{.}\PYG{n}{GUID\PYGZus{}FILENAME}\PYG{p}{):}
+            \PYG{n}{guidfile} \PYG{o}{=} \PYG{n+nb}{open}\PYG{p}{(}\PYG{n}{cfg}\PYG{o}{.}\PYG{n}{GUID\PYGZus{}FILENAME}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}r\PYGZdq{}}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{global\PYGZus{}uid} \PYG{o}{=} \PYG{n}{guidfile}\PYG{o}{.}\PYG{n}{read}\PYG{p}{()}
+            \PYG{n}{guidfile}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{n}{guidfile} \PYG{o}{=} \PYG{n+nb}{open}\PYG{p}{(}\PYG{n}{cfg}\PYG{o}{.}\PYG{n}{GUID\PYGZus{}FILENAME}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}w\PYGZdq{}}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{global\PYGZus{}uid} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{uuid}\PYG{o}{.}\PYG{n}{uuid4}\PYG{p}{())}\PYG{o}{.}\PYG{n}{replace}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{)}
+            \PYG{n}{guidfile}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{global\PYGZus{}uid}\PYG{p}{)}
+            \PYG{n}{guidfile}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+        \PYG{n}{cfg}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}guid}\PYG{p}{())}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{device} \PYG{o}{=} \PYG{n}{device}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{communicator} \PYG{o}{=} \PYG{n}{Communicator}\PYG{p}{(}\PYG{n+nb+bp}{False}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{get\PYGZus{}guid}\PYG{p}{())}
+        \PYG{n}{cfg}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Ok\PYGZdq{}}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} device mode of communicator}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{communicator}\PYG{o}{.}\PYG{n}{give\PYGZus{}my\PYGZus{}spec}\PYG{p}{(}\PYG{n}{device}\PYG{o}{.}\PYG{n}{get\PYGZus{}num\PYGZus{}of\PYGZus{}chanels}\PYG{p}{(),} \PYG{n}{device}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{n}{device}\PYG{o}{.}\PYG{n}{description}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{device}\PYG{p}{,} \PYG{n}{ThreadedDevice}\PYG{p}{):}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{device}\PYG{o}{.}\PYG{n}{set\PYGZus{}callback}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{send\PYGZus{}data\PYGZus{}to\PYGZus{}serv}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}guid}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        :return: \PYGZsq{}self.global\PYGZus{}uid\PYGZsq{}}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{global\PYGZus{}uid}
+
+    \PYG{k}{def} \PYG{n+nf}{send\PYGZus{}data\PYGZus{}to\PYGZus{}serv}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{device}\PYG{p}{):}
+        \PYG{k}{print}\PYG{p}{(}\PYG{n}{device}\PYG{o}{.}\PYG{n}{get\PYGZus{}values}\PYG{p}{())}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{communicator}\PYG{o}{.}\PYG{n}{is\PYGZus{}ready}\PYG{p}{():}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{communicator}\PYG{o}{.}\PYG{n}{give\PYGZus{}data\PYGZus{}packet}\PYG{p}{(}\PYG{n}{device}\PYG{o}{.}\PYG{n}{get\PYGZus{}values}\PYG{p}{())}
+
+    \PYG{k}{def} \PYG{n+nf}{stop}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{device}\PYG{o}{.}\PYG{n}{kill}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{communicator}\PYG{o}{.}\PYG{n}{stop}\PYG{p}{()}
+
+
+\PYG{k}{if} \PYG{n}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZdq{}}\PYG{p}{:}
+    \PYG{n}{device} \PYG{o}{=} \PYG{n}{brain} \PYG{o}{=} \PYG{n+nb+bp}{None}
+    \PYG{k}{try}\PYG{p}{:}
+        \PYG{n}{device} \PYG{o}{=} \PYG{n}{implemented\PYGZus{}devices}\PYG{p}{[}\PYG{n}{cfg}\PYG{o}{.}\PYG{n}{SENSOR}\PYG{p}{](}\PYG{l+m+mi}{100}\PYG{p}{)}
+        \PYG{n}{brain} \PYG{o}{=} \PYG{n}{DeviceBrain}\PYG{p}{(}\PYG{n}{device}\PYG{p}{)}
+        \PYG{k}{while} \PYG{n+nb+bp}{True}\PYG{p}{:} \PYG{k}{continue}
+    \PYG{k}{except} \PYG{n+ne}{KeyboardInterrupt} \PYG{k}{as} \PYG{n}{e}\PYG{p}{:}
+        \PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZlt{}Ctrl\PYGZhy{}c\PYGZgt{} = user quit\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{finally}\PYG{p}{:}
+        \PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Exiting...\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{brain}\PYG{p}{:}
+            \PYG{n}{brain}\PYG{o}{.}\PYG{n}{stop}\PYG{p}{()}
+\end{Verbatim}
