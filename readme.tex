@@ -159,7 +159,7 @@
 	J'ai aussi développé la partie "device" qui fait le lien entre la partie capteur et "communicator". Cette partie est lancée au démarrage des Raspberry Pi et permet au "device" de commencer son fonctionnement.
 	
 	\paragraph{}
-	Aussi, j'ai réalisé la partie de génération du son dans le "server". Ainsi, ce dernier peut aller chercher la dernière configuration disponible dans la base de données, retracer la structure en arbre ayant pour racine la sortie du son et générer à partir de là des portions de son de 50ms (intervalle minimal pour pouvoir avoir une période complète de la plus basse fréquence audible). Il est donc doté d'une partie permettant la lecture de son et d'une partie permettant la génération de son. De plus, une interface simple est disponible pour créer des "boxes" qui permettent de prendre un(des) son(s) ou une(des) valeur(s) et de les traiter. Chaque "box" représente un nœud de l'arbre.
+	Aussi, j'ai réalisé la partie de génération du son dans le "server". Ainsi, ce dernier peut aller chercher la dernière configuration disponible dans la base de données, retracer la structure en arbre ayant pour racine la sortie du son et générer à partir de là des portions de son de 100ms (intervalle minimal pour pouvoir avoir deux période complète de la plus basse fréquence audible). Il est donc doté d'une partie permettant la lecture de son et d'une partie permettant la génération de son. De plus, une interface simple est disponible pour créer des "boxes" qui permettent de prendre un(des) son(s) ou une(des) valeur(s) et de les traiter. Chaque "box" représente un nœud de l'arbre.
 	
 	\paragraph{}
 	Voici un exemple de configuration ainsi que son schéma fonctionnel :\\
